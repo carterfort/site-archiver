@@ -14,3 +14,6 @@
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('archive-url', "ArchiveController@url");
+Route::get('processing/{sessionID}', "ArchiveController@processSession");
