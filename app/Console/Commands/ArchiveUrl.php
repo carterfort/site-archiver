@@ -16,7 +16,7 @@ class ArchiveUrl extends Command
      *
      * @var string
      */
-    protected $signature = 'archive {url}';
+    protected $signature = 'archive {url} {replacement?}';
 
     /**
      * The console command description.
@@ -42,7 +42,7 @@ class ArchiveUrl extends Command
      */
     public function handle()
     {
-        $this->dispatch(new ProcessUrl($this->argument('url'), null));
+        $this->dispatch(new ProcessUrl($this->argument('url'), null, $this->argument('replacement')));
         $this->info("URL processing. Thank you :)");
     }
 }
