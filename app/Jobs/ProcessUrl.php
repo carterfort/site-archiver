@@ -23,15 +23,17 @@ class ProcessUrl extends Job implements ShouldQueue
      */
     protected $url;
     protected $processId;
+    protected $replacementUrl;
 
     protected $resources = [];
     protected $urls = [];
 
-    public function __construct($url, $processId)
+    public function __construct($url, $processId, $replacementUrl = false)
     {
         //
         $this->url = $url;
         $this->processId = $processId;
+        $this->replacementUrl = $replacementUrl;
     }
 
     /**
@@ -48,31 +50,48 @@ class ProcessUrl extends Job implements ShouldQueue
 
     protected function parseUrl($url)
     {
+        try {
+            $contents = file_get_contents($url); 
+        } catch(\Exception $e){
+            echo ("Bad URL: {$url}");
+            return;
+        }
+
         event(new ResourceWasLoaded($url));
-        $rootHtml = file_get_contents($url);
 
-        $crawler = new Crawler($rootHtml);
+        $bareUrl = preg_replace('~(http|ftp|https)://~', "", $url);
 
-        $links = $crawler->filter('a');
+        preg_match_all("!".$bareUrl."([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?!u", 
+            $contents, 
+            $links
+        );
+
+        $links = array_map(function($match) use ($bareUrl){
+            $relativeLink = str_replace($bareUrl, "", $match);
+            return rtrim($this->url.$relativeLink, "/");
+        }, $links[0]);
+
+        $links = array_unique($links);
+
         $followLinks = [];
 
         foreach ($links as $link)
         {
-            $href = $link->getAttribute('href');
-            $this->addLink($href, $rootHtml, $followLinks);
+            $this->addLink($link, $followLinks);
         }
 
         foreach ($followLinks as $linkToFollow)
         {
+            var_dump($linkToFollow);
             $this->parseUrl($linkToFollow);
         }
 
-        $this->storeHtmlForUrl($url, $rootHtml);
+        $this->storeContentsForUrl($url, $contents);
 
         event(new UrlWasArchived($url, null));
     }
 
-    protected function storeHtmlForUrl($url, $html)
+    protected function storeContentsForUrl($url, $contents)
     {
         if ( ! is_dir(storage_path('output')))
         {
@@ -86,27 +105,39 @@ class ProcessUrl extends Job implements ShouldQueue
         $currentPath = storage_path('output');
 
         if ( $url != $this->url){
-            foreach ($pathComponents as $component)
+            foreach ($pathComponents as $i => $component)
             {
                 $currentPath .= "/{$component}";
                 if ( ! is_dir($currentPath)){
-                    mkdir($currentPath, 0777, false);
+                    if ( ! ($this->isFile($url) && ($i + 1 == count($pathComponents)))){
+                        mkdir($currentPath, 0777, false);
+                    }
                 }
             }
         }
 
-        $storagePath = "{$currentPath}/index.html";
-        $bytes = file_put_contents($storagePath, $html);
+        $storagePath = "{$currentPath}";
+        if (! $this->isFile($url)){
+            $storagePath .= '/index.html';
+        }
+
+        if ($this->replacementUrl){
+            $contents = str_replace($this->url, $this->replacementUrl, $contents);
+        }
+
+        $bytes = file_put_contents($storagePath, $contents);
     }
 
-    protected function addLink($href, $rootHtml, &$followLinks)
+    protected function isFile($url)
     {
-        $pattern = '/(https?:\/\/.*\.(?:png|jpg))/';
+        $pattern = '~.*(?:css|ico|jpg|png)~';
+        preg_match($pattern, $url, $matches);
 
-        $matches = [];
-        preg_match($pattern, $href, $matches);
-        if (count($matches) > 0) return;
+        return count($matches) > 0;
+    }
 
+    protected function addLink($href, &$followLinks)
+    {
         if (str_contains($href, $this->url) && $this->url != $href){
                 if ( ! in_array($href, $this->urls))
                 {
