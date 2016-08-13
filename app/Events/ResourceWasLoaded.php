@@ -6,7 +6,7 @@ use App\Events\Event;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class ResourceWasLoaded extends Event
+class ResourceWasLoaded extends Event implements ShouldBroadcast
 {
     use SerializesModels;
 
@@ -15,9 +15,11 @@ class ResourceWasLoaded extends Event
      *
      * @return void
      */
-    public function __construct()
+    protected $url;
+
+    public function __construct($url)
     {
-        //
+        $this->url = $url;
     }
 
     /**
@@ -29,4 +31,12 @@ class ResourceWasLoaded extends Event
     {
         return ['main'];
     }
+
+    public function broadcastWith()
+    {
+        return [
+            'url' => $this->url
+        ];
+    }
+
 }
