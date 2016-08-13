@@ -48,20 +48,20 @@ class ProcessUrl extends Job implements ShouldQueue
 
     }
 
-    protected function parseUrl($url)
+    protected function parseUrl($url, $recursing = false)
     {
         try {
             $contents = file_get_contents($url); 
         } catch(\Exception $e){
-            echo ("Bad URL: {$url}");
             return;
         }
 
         event(new ResourceWasLoaded($url));
 
-        $bareUrl = preg_replace('~(http|ftp|https)://~', "", $url);
+        $bareUrl = preg_replace('~(http|ftp|https)://~', "", $this->url);
+        $pattern = "!".$bareUrl."([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?!u";
 
-        preg_match_all("!".$bareUrl."([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?!u", 
+        preg_match_all($pattern, 
             $contents, 
             $links
         );
@@ -71,19 +71,9 @@ class ProcessUrl extends Job implements ShouldQueue
             return rtrim($this->url.$relativeLink, "/");
         }, $links[0]);
 
-        $links = array_unique($links);
-
-        $followLinks = [];
-
         foreach ($links as $link)
         {
-            $this->addLink($link, $followLinks);
-        }
-
-        foreach ($followLinks as $linkToFollow)
-        {
-            var_dump($linkToFollow);
-            $this->parseUrl($linkToFollow);
+            $this->addLink($link);
         }
 
         $this->storeContentsForUrl($url, $contents);
@@ -136,13 +126,13 @@ class ProcessUrl extends Job implements ShouldQueue
         return count($matches) > 0;
     }
 
-    protected function addLink($href, &$followLinks)
+    protected function addLink($href)
     {
         if (str_contains($href, $this->url) && $this->url != $href){
                 if ( ! in_array($href, $this->urls))
                 {
-                    $followLinks[] = $href;
                     $this->urls[] = $href;
+                    $this->parseUrl($href, true);
                 }
             }
     }
