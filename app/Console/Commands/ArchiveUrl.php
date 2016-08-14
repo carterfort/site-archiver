@@ -47,6 +47,8 @@ class ArchiveUrl extends Command
                 session()->getId(),
                 $this->argument('replacement')
             ));
-        $this->info("URL processing. Thank you :)");
+        $sessionId = session()->getId();
+
+        $this->info("URL processing. Check storage/archives for {$sessionId}.zip");
     }
 }
