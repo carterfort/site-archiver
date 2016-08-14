@@ -17,9 +17,12 @@ class ResourceWasLoaded extends Event implements ShouldBroadcast
      */
     protected $url;
 
-    public function __construct($url)
+    protected $sessionId;
+
+    public function __construct($url, $sessionId)
     {
         $this->url = $url;
+        $this->sessionId = $sessionId;
     }
 
     /**
@@ -29,7 +32,7 @@ class ResourceWasLoaded extends Event implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return ['main'];
+        return ['session-progress:'.$this->sessionId];
     }
 
     public function broadcastWith()
