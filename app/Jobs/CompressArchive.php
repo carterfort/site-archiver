@@ -50,6 +50,9 @@ class CompressArchive extends Job implements ShouldQueue
                 ZipArchive::CREATE | ZipArchive::OVERWRITE
         );
 
+        // Initialize empty "delete list"
+        $filesToDelete = [];
+
         // Create recursive directory iterator
         /** @var SplFileInfo[] $files */
         $files = new RecursiveIteratorIterator(
@@ -60,16 +63,22 @@ class CompressArchive extends Job implements ShouldQueue
         foreach ($files as $name => $file) {
             // Skip directories (they would be added automatically)
             if (!$file->isDir()) {
-            // Get real and relative path for current file
-            $filePath = $file->getRealPath();
-            $relativePath = substr($filePath, strlen($rootPath) + 1);
+                // Get real and relative path for current file
+                $filePath = $file->getRealPath();
+                $relativePath = substr($filePath, strlen($rootPath) + 1);
 
-            // Add current file to archive
-            $zip->addFile($filePath, $relativePath);
+                // Add current file to archive
+                $zip->addFile($filePath, $relativePath);
+                $filesToDelete[] = $filePath;
             }
         }
 
         // Zip archive will be created only after closing object
         $zip->close();
+
+        // Delete all files from "delete list"
+        foreach ($filesToDelete as $file) {
+            unlink($file);
+        }
     }
 }
