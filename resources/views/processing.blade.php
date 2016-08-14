@@ -1,14 +1,47 @@
 @extends('layouts.main')
 @section('main')
 
-<div class="title">Processing...</div>
-<br/>
-<p>Session {{$sessionID}}</p>
+<style>
+	div.col {
+		width: 28.5%;
+		float: left;
+		margin: 2.5%;
+	}
+	div.col:first-of-type {
+		margin-left:0;
+	}
 
+	div.col:last-of-type {
+		margin-right:0;
+	}
+</style>
 <div id="terminal">
-	<p v-for="url in urls">
-		@{{ url }}
-	</p>
+
+	<div class="title" v-html="titleMessage">
+	</div>
+
+	<br/>
+
+	<p>Session {{$sessionID}}</p>
+
+	<div class="col">
+		<h3>Loaded Resources</h3>
+		<p v-for="url in loadedUrls.slice(0,3)">
+			@{{ url }}
+		</p>
+	</div>
+	<div class="col">
+		<h3>Archived Resources</h3>
+		<p v-for="url in archivedUrls.slice(0,3)">
+			@{{ url }}
+		</p>
+	</div>
+	<div class="col">
+		<h3>Latest Image</h3>
+		<img v-if="imageSource" v-bind:src="imageSource" style="width:100%" />
+	</div>
+
+
 </div>
 
 @stop
@@ -22,18 +55,40 @@
 		new Vue({
 			el : '#terminal',
 			data : {
-				resources : [],
-				urls : ['http://outtolunchproductions.com']
+				titleMessage: "Processing...",
+				loadedUrls : [],
+				archivedUrls : [],
+				imageSource : false,
 			},
 			ready (){
-				socket.on("session-progress:{{$sessionID}}:App\\Events\\UrlWasArchived", function(message){
 
-					console.log(message);
-					
+				socket.on("session-progress:{{$sessionID}}:App\\Events\\ResourceWasLoaded", function(message){
 		            if(message.url)
-			            this.urls.push(message.url)
+			            this.loadedUrls.unshift(message.url)
 
 		        }.bind(this));
+
+				socket.on("session-progress:{{$sessionID}}:App\\Events\\UrlWasArchived", function(message){
+		            if(message.url)
+			            this.archivedUrls.unshift(message.url)
+
+		        }.bind(this));
+
+		        socket.on("session-progress:{{$sessionID}}:App\\Events\\ImageWasDownloaded", function(message){
+		            if(message.image)
+			        	this.imageSource = "data:image/jpeg;base64, "+message.image;
+
+		        }.bind(this));
+
+		        socket.on("session-progress:{{$sessionID}}:App\\Events\\ArchiveComplete", function(message){
+		            this.archiveComplete();
+		        }.bind(this));     
+			},
+			methods : {
+				archiveComplete(){ 
+					this.titleMessage = 'Archive complete!<br/><small>Downloading now...</small>';
+					window.location = "{{$redirectUrl}}";
+				}
 			}
 		});
 	</script>
