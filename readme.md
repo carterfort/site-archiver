@@ -19,6 +19,14 @@ Built using the one-and-only [Laravel](http://laravel.com).
 
 If you like, use `redis-cli monitor` to keep an eye on your queued jobs. There will be a *lot* of them.
 
+<h4><span style="color:red">Word of warning</span></h4>
+
+**This app is only for use on sites you control!**
+
+Site Archiver looks for every link it can find at the provided URL that contain the root URL. i.e., if you sic it on `http://example.com`, it will find every anchor tag, reference link, image source, javascript, stylesheet, etc. it can that contains `http://example.com`. It will then go to each of *those* resources, and, if it finds more links it hasn't yet added to the download queue, it will add those as well.
+
+If you point this at `https://google.com`, I have no idea what will happen, but I imagine it will wind up looking like some kind of DDoS attack and get you in trouble. Seriously, only use this for your own stuff.
+
 ###Troubleshooting
 
 Because the app uses Redis to queue up the tasks, it will try to re-start queued processes if there are failures. Keep an eye on the queue listener process (see below) for any error messages, or keep checking `storage/logs/laravel.log`.
