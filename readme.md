@@ -21,11 +21,11 @@ Because the app uses Redis to queue up the tasks, it will try to re-start queued
 
 ###System Requirements
 
-[Composer](https://getcomposer.org)
+[Composer](https://getcomposer.org) - PHP package manager
 
-[Redis](http://redis.io)
+[Redis](http://redis.io) - Memory store. Good for queues and caches
 
-[PHP 7](http://php.net/manual/en/migration70.new-features.php)
+[PHP 7](http://php.net/manual/en/migration70.new-features.php) - The language all the internet adores
 
 If you're on a Mac, I recommend installing PHP and Redis via [Home Brew](http://brew.sh)
 
