@@ -16,11 +16,13 @@ class ArchiveComplete extends Event implements ShouldBroadcast
      * @return void
      */
     protected $sessionId;
+    public $directory;
 
-    public function __construct($sessionId)
+    public function __construct($sessionId, $directory)
     {
         //
         $this->sessionId = $sessionId;
+        $this->directory = $directory;
     }
 
     /**
