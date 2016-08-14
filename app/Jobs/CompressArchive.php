@@ -5,12 +5,13 @@ namespace App\Jobs;
 use ZipArchive;
 use App\Jobs\Job;
 use RecursiveIteratorIterator;
+use App\Events\ArchiveComplete;
 use RecursiveDirectoryIterator;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class CompressArchive extends Job implements ShouldQueue
+class CompressArchive extends Job
 {
     use InteractsWithQueue, SerializesModels;
 
@@ -73,12 +74,12 @@ class CompressArchive extends Job implements ShouldQueue
             }
         }
 
-        // Zip archive will be created only after closing object
         $zip->close();
 
-        // Delete all files from "delete list"
-        foreach ($filesToDelete as $file) {
-            unlink($file);
-        }
+         event(new ArchiveComplete(
+                $this->sessionId,
+                storage_path('output/'.$this->directory)
+            )
+        );
     }
 }

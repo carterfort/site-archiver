@@ -47,12 +47,6 @@ class ProcessUrl extends Job implements ShouldQueue
     {
         $this->parseUrl($this->url);
 
-        event(new ArchiveComplete(
-                $this->sessionId,
-                $this->storageDirectory()
-            )
-        );
-
         $this->dispatch(new CompressArchive( 
             $this->sessionId,
             preg_replace('~(http|https)://~', '', $this->url)
