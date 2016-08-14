@@ -4,17 +4,19 @@ namespace App\Jobs;
 
 use App\Jobs\Job;
 use App\Events\UrlWasArchived;
+use App\Events\ArchiveComplete;
 use App\Events\ResourceWasLoaded;
+use App\Events\ImageWasDownloaded;
 use Illuminate\Support\Facades\File;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
-use Symfony\Component\DomCrawler\Crawler;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\DispatchesJobs;
 
 class ProcessUrl extends Job implements ShouldQueue
 {
-    use InteractsWithQueue, SerializesModels;
+    use InteractsWithQueue, SerializesModels, DispatchesJobs;
 
     /**
      * Create a new job instance.
@@ -22,17 +24,17 @@ class ProcessUrl extends Job implements ShouldQueue
      * @return void
      */
     protected $url;
-    protected $processId;
     protected $replacementUrl;
+    protected $sessionId;
 
     protected $resources = [];
     protected $urls = [];
 
-    public function __construct($url, $processId, $replacementUrl = false)
+    public function __construct($url, $sessionId, $replacementUrl = false)
     {
         //
         $this->url = $url;
-        $this->processId = $processId;
+        $this->sessionId = $sessionId;
         $this->replacementUrl = $replacementUrl;
     }
 
@@ -44,7 +46,17 @@ class ProcessUrl extends Job implements ShouldQueue
     public function handle()
     {
         $this->parseUrl($this->url);
-        return ($this->urls);
+
+        event(new ArchiveComplete(
+                $this->sessionId,
+                $this->storageDirectory()
+            )
+        );
+
+        $this->dispatch(new CompressArchive( 
+            $this->sessionId,
+            preg_replace('~(http|https)://~', '', $this->url)
+        ));
 
     }
 
@@ -56,7 +68,7 @@ class ProcessUrl extends Job implements ShouldQueue
             return;
         }
 
-        event(new ResourceWasLoaded($url));
+        event(new ResourceWasLoaded($url, $this->sessionId));
 
         $bareUrl = preg_replace('~(http|ftp|https)://~', "", $this->url);
         $pattern = "!".$bareUrl."([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?!u";
@@ -78,7 +90,12 @@ class ProcessUrl extends Job implements ShouldQueue
 
         $this->storeContentsForUrl($url, $contents);
 
-        event(new UrlWasArchived($url, null));
+    }
+
+    protected function storageDirectory()
+    {
+        $storageDir = preg_replace('~(http|https)://~', '', $this->url);
+        return storage_path('output/'.$storageDir);
     }
 
     protected function storeContentsForUrl($url, $contents)
@@ -88,11 +105,18 @@ class ProcessUrl extends Job implements ShouldQueue
             mkdir(storage_path('output'), 0755, false);
         }
 
+        $archiveStorage = $this->storageDirectory();
+
+        if ( ! is_dir($archiveStorage))
+        {
+            mkdir($archiveStorage, 0755, false);
+        }
+
         $url = str_replace($this->url."/", "", $url);
         $url = rtrim($url, "/");
         $pathComponents = explode("/", $url);
 
-        $currentPath = storage_path('output');
+        $currentPath = $archiveStorage;
 
         if ( $url != $this->url){
             foreach ($pathComponents as $i => $component)
@@ -107,8 +131,11 @@ class ProcessUrl extends Job implements ShouldQueue
         }
 
         $storagePath = "{$currentPath}";
-        if (! $this->isFile($url)){
+        if ( $this->isFile($url) ){
+            event(new ImageWasDownloaded(base64_encode($contents), $this->sessionId));
+        } else {
             $storagePath .= '/index.html';
+            event(new UrlWasArchived($url, $this->sessionId));
         }
 
         if ($this->replacementUrl){
@@ -120,7 +147,7 @@ class ProcessUrl extends Job implements ShouldQueue
 
     protected function isFile($url)
     {
-        $pattern = '~.*(?:css|ico|jpg|png)~';
+        $pattern = '~.*(?:css|js|ico|jpg|png|jpeg)~';
         preg_match($pattern, $url, $matches);
 
         return count($matches) > 0;
