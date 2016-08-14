@@ -1,27 +1,56 @@
-# Laravel PHP Framework
+#Site Archiver
 
-[![Build Status](https://travis-ci.org/laravel/framework.svg)](https://travis-ci.org/laravel/framework)
-[![Total Downloads](https://poser.pugx.org/laravel/framework/d/total.svg)](https://packagist.org/packages/laravel/framework)
-[![Latest Stable Version](https://poser.pugx.org/laravel/framework/v/stable.svg)](https://packagist.org/packages/laravel/framework)
-[![Latest Unstable Version](https://poser.pugx.org/laravel/framework/v/unstable.svg)](https://packagist.org/packages/laravel/framework)
-[![License](https://poser.pugx.org/laravel/framework/license.svg)](https://packagist.org/packages/laravel/framework)
+A way to pull down HTML, CSS, JavaScript, and images from a website.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable, creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as authentication, routing, sessions, queueing, and caching.
+Useful for archiving CMSes that you don't have the capacity to maintain anymore and no longer need to be updated.
 
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications. A superb inversion of control container, expressive migration system, and tightly integrated unit testing support give you the tools you need to build any application with which you are tasked.
+###How to use
 
-## Official Documentation
+1. Install (see below)
+2. Option A: command line
+	1. Using Artisan (Laravel's CLI), fire off the 'archive' command: `php artisan archive http://root-website-url.com`. Optionally, you can add a replacement url which just swaps out all occurences of the url. This is convenient if you want to host the site at a different url.
+	2. The site will be saved in `storage/output/site-url`. After all files have been downloaded, a ZIP archive will be saved in `storage/archives/processId.zip`.
+3. Option B: web interface
+	1. Load the site in a web-browser. The root url is a pretty self-explanatory form, with an input for an url and a button.
+	2. Once the archive has started (this will take some time depending on the overall size of the site) information about which urls have been loaded/archived will appear, as well as the last image downloaded.
+	3. After the archive has completed, a ZIP will be downloaded through your browser.
 
-Documentation for the framework can be found on the [Laravel website](http://laravel.com/docs).
+After downloading everything, 
 
-## Contributing
+###System Requirements
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](http://laravel.com/docs/contributions).
+[Composer](https://getcomposer.org)
 
-## Security Vulnerabilities
+[Redis](http://redis.io)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell at taylor@laravel.com. All security vulnerabilities will be promptly addressed.
+[PHP 7](http://php.net/manual/en/migration70.new-features.php)
 
-## License
+If you're on a Mac, I recommend installing PHP and Redis via [Home Brew](http://brew.sh)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+###Installation
+
+```
+git clone https://github.com/carterfort/site-archiver
+cd site-archiver
+```
+
+####Install Dependencies
+```
+composer install
+npm install
+```
+
+####Set up environment variables
+
+```
+cp .env.example .env
+php artisan key:generate
+```
+
+####Start up your listeners and Socket.io
+
+This app uses Socket.io and a Redis server for event monitoring. To start, you'll need two separate processes that you'll keep running while you're using the app.
+
+`node socket.js` and `php artisan queue:listen`
+
+Both of these have to be *running* for the app to function properly.
