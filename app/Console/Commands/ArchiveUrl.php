@@ -42,7 +42,11 @@ class ArchiveUrl extends Command
      */
     public function handle()
     {
-        $this->dispatch(new ProcessUrl($this->argument('url'), null, $this->argument('replacement')));
+        $this->dispatch(new ProcessUrl(
+                $this->argument('url'), 
+                session()->getId(),
+                $this->argument('replacement')
+            ));
         $this->info("URL processing. Thank you :)");
     }
 }
