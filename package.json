@@ -10,8 +10,9 @@
     "laravel-elixir-vueify": "^1.0.0"
   },
   "dependencies": {
-    "socket.io": "^1.4.8",
-    "express" : "^4.14.0",
-    "http" : "^0.0.0"
+    "express": "^4.14.0",
+    "http": "^0.0.0",
+    "ioredis": "^2.3.0",
+    "socket.io": "^1.4.8"
   }
 }
