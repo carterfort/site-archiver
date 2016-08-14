@@ -4,6 +4,8 @@ A way to pull down HTML, CSS, JavaScript, and images from a website.
 
 Useful for archiving CMSes that you don't have the capacity to maintain anymore and no longer need to be updated.
 
+Built using the one-and-only [Laravel](http://laravel.com)
+
 ###How to use
 
 1. Install (see below)
