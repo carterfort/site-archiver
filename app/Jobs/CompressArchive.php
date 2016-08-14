@@ -38,6 +38,10 @@ class CompressArchive extends Job
      */
     public function handle()
     {
+
+        //This method mostly lifted from here:
+        //http://stackoverflow.com/questions/4914750/how-to-zip-a-whole-folder-using-php#answer-4914807
+        
         // Get real path for our folder
         $rootPath = storage_path('output/'.$this->directory);
 
@@ -50,9 +54,6 @@ class CompressArchive extends Job
         $zip->open(storage_path('archives/'.$this->sessionId.'.zip'), 
                 ZipArchive::CREATE | ZipArchive::OVERWRITE
         );
-
-        // Initialize empty "delete list"
-        $filesToDelete = [];
 
         // Create recursive directory iterator
         /** @var SplFileInfo[] $files */
@@ -70,7 +71,6 @@ class CompressArchive extends Job
 
                 // Add current file to archive
                 $zip->addFile($filePath, $relativePath);
-                $filesToDelete[] = $filePath;
             }
         }
 
