@@ -17,9 +17,13 @@ Built using the one-and-only [Laravel](http://laravel.com).
 	2. Once the archive has started (this will take some time depending on the overall size of the site) information about which urls have been loaded/archived will appear, as well as the last image downloaded.
 	3. After the archive has completed, a ZIP will be downloaded through your browser.
 
+If you like, use `redis-cli monitor` to keep an eye on your queued jobs. There will be a *lot* of them.
+
 ###Troubleshooting
 
 Because the app uses Redis to queue up the tasks, it will try to re-start queued processes if there are failures. Keep an eye on the queue listener process (see below) for any error messages, or keep checking `storage/logs/laravel.log`.
+
+If you wind up stuck with a whole bunch of queued jobs that never complete, you can stop the `queue:listen` process and flush your Redis queue with `redis-cli flushall`.
 
 ###System Requirements
 
