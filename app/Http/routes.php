@@ -17,3 +17,4 @@ Route::get('/', function () {
 
 Route::get('archive-url', "ArchiveController@url");
 Route::get('processing/{sessionID}', "ArchiveController@processSession");
+Route::get('process/{sessionId}/download/{name}', "ArchiveController@download");
