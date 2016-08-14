@@ -9,24 +9,23 @@ use Illuminate\Http\Request;
 class ArchiveController extends Controller
 {
     
-    public function url(Request $request)
-    {
+    public function url(Request $request) {
     	$this->validate($request, [
     		'url' => 'required|url'
 		]);
 
-		$sessionID = md5(time());
-		//Write this session to the DB
-		//Begin the process
-		//Redirect to this session's processing page
+		$sessionID = session()->getId();
+		$scrubbedUrl = preg_replace('~(http|https)://|(\.com)~', '', $request->url);
+		$redirectUrl = url("process/{$sessionID}/download/{$scrubbedUrl}");
 
 		$this->dispatch(new ProcessUrl($request->url, $sessionID));
+        
+        return view('processing', compact('sessionID', 'redirectUrl'));
 
-    	return redirect("/processing/{$sessionID}");
     }
 
-    public function processSession($sessionID)
-    {
-    	return view('processing', compact('sessionID'));
+    public function download($sessionId, $name) {
+    	return response()->download(storage_path('archives/'.$sessionId.'.zip'), $name.'.zip');
     }
+
 }
