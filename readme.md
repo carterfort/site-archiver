@@ -15,7 +15,9 @@ Useful for archiving CMSes that you don't have the capacity to maintain anymore 
 	2. Once the archive has started (this will take some time depending on the overall size of the site) information about which urls have been loaded/archived will appear, as well as the last image downloaded.
 	3. After the archive has completed, a ZIP will be downloaded through your browser.
 
-After downloading everything, 
+###Troubleshooting
+
+Because the app uses Redis to queue up the tasks, it will try to re-start queued processes if there are failures. Keep an eye on the queue listener process (see below) for any error messages, or keep checking `storage/logs/laravel.log`.
 
 ###System Requirements
 
