@@ -19,7 +19,7 @@ Built using the one-and-only [Laravel](http://laravel.com).
 
 If you like, use `redis-cli monitor` to keep an eye on your queued jobs. There will be a *lot* of them.
 
-<b><span style="color:red">Word of warning</span></b>
+<b><em style="color:red">Word of warning</em></b>
 
 **This app is only for use on sites you control!**
 
