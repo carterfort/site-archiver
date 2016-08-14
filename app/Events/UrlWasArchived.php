@@ -17,6 +17,7 @@ class UrlWasArchived extends Event implements ShouldBroadcast
      */
     
     public $url;
+
     protected $sessionId;
 
     public function __construct($url, $sessionId)
